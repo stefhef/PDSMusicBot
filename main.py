@@ -1,10 +1,10 @@
 import discord
-from discord.ext import commands,tasks
+from discord.ext import commands, tasks
 import os
 import logging
-from dotenv import load_dotenv
 import asyncio
 
+from settings import *
 
 discord.utils.setup_logging()
 
@@ -12,9 +12,6 @@ discord.utils.setup_logging()
 discord.utils.setup_logging(level=logging.INFO, root=False)
 
 
-load_dotenv()
-# Get the API token from the .env file.
-DISCORD_TOKEN = os.getenv("discord_token")
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix='!',intents=intents)
@@ -37,7 +34,7 @@ class Music(commands.Cog):
     async def join(self, ctx):
         await ctx.message.delete()
         if not ctx.message.author.voice:
-            await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name), delete_after=5.0)
+            await ctx.send(f"{ctx.message.author.name}, подключитесь к голосовому каналу, пожалуйста", delete_after=MESSAGE_DELETE_TIME)
             return
         else:
             channel = ctx.message.author.voice.channel
@@ -51,27 +48,27 @@ class Music(commands.Cog):
         if self.vc.is_connected():
             await self.vc.disconnect()
         else:
-            await ctx.send("The bot is not connected to a voice channel.", delete_after=5.0)
+            await ctx.send("Бот не в голосовом канале", delete_after=MESSAGE_DELETE_TIME)
 
     # @bot.command(name='play', help='To play song')
-    @commands.command()
+    @commands.command(nape="play", aliases=["p", "играй"])
     async def play(self, ctx, path):
         await ctx.message.delete()
         try:
             async with ctx.typing():
-                self.vc.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=f"{path}"))
-            await ctx.send(f"Now playing: {path}", delete_after=5.0)
+                ctx.voice_client.play(discord.FFmpegPCMAudio(executable="ffmpeg.exe", source=f"{path}"))
+            await ctx.send(f"Сейчас играет: {path}", delete_after=MESSAGE_DELETE_TIME)
         except Exception as e:
             logging.log(0, msg=f"{e}")
             print(e)
-            await ctx.send("The bot is not connected to a voice channel.", delete_after=5.0)
+            await ctx.send("Бот не в голосовом канале", delete_after=MESSAGE_DELETE_TIME)
 
 
     # @bot.command(name='test', help='To play song')
     @commands.command()
     async def test(self, ctx):
         await ctx.message.delete()
-        await ctx.send("Сосис член", delete_after=5.05)
+        await ctx.send("Сосис член", delete_after=MESSAGE_DELETE_TIME)
 
 
     # @bot.command(name='pause', help='This command pauses the song')
@@ -81,7 +78,7 @@ class Music(commands.Cog):
         if self.vc.is_playing():
             self.vc.pause()
         else:
-            await ctx.send("The bot is not playing anything at the moment.", delete_after=5.0)
+            await ctx.send("Сейчас нет играющего трeка. Ты глухой?", delete_after=MESSAGE_DELETE_TIME)
         
     # @bot.command(name='resume', help='Resumes the song')
     @commands.command()
@@ -90,7 +87,7 @@ class Music(commands.Cog):
         if self.vc.is_paused():
             self.vc.resume()
         else:
-            await ctx.send("The bot was not playing anything before this. Use play_song command", delete_after=5.0)
+            await ctx.send("Бот ничего не играл, тупой ты", delete_after=MESSAGE_DELETE_TIME)
 
 
     # @bot.command(name='stop', help='Stops the song')
@@ -100,7 +97,7 @@ class Music(commands.Cog):
         if self.vc.is_playing():
             self.vc.stop()
         else:
-            await ctx.send("The bot is not playing anything at the moment.", delete_after=5.0)
+            await ctx.send("Сейчас нет играющего трэка. Ты глухой?", delete_after=MESSAGE_DELETE_TIME)
 
 async def start_up(bot):
     await bot.add_cog(Music(bot))
